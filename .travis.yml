@@ -3,14 +3,21 @@ services:
   - docker
 
 before_install:
-  - docker build -t pranavbhosale/react-test -f ./client/Dockerfile.dev ./client
+  - docker build -t pranavbhosale25/react-test -f ./client/Dockerfile.dev ./client
   # - docker build <other containers> 
 
 script:
-  - docker run pranavbhosale/react-test npm test -- --coverage
+  - docker run pranavbhosale25/react-test npm test -- --coverage
 
 after_sucess:
-  - docker build -t pranavbhosale/multi-client ./client 
-  - docker build -t pranavbhosale/multi-nginx ./nginx
-  - docker build -t pranavbhosale/multi-server ./server
-  - docker build -t pranavbhosale/multi-worker ./worker  
+  - docker build -t pranavbhosale25/multi-client ./client 
+  - docker build -t pranavbhosale25/multi-nginx ./nginx
+  - docker build -t pranavbhosale25/multi-server ./server
+  - docker build -t pranavbhosale25/multi-worker ./worker  
+  # login to docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # take images and push them to docker hub
+  - docker push pranavbhosale25/multi-client
+  - docker push pranavbhosale25/multi-nginx
+  - docker push pranavbhosale25/multi-server
+  - docker push pranavbhosale25/multi-worker
