@@ -2,39 +2,29 @@ sudo: required
 language: node_js
 services:
   - docker
-
+env:
+  global:
+    - SHA=$(git rev-parse HEAD)
+    - CLOUDSDK_CORE_DISABLE_PROMPTS=1
 before_install:
-  - echo "before install complete"
-  # - docker build -t pranavbhosale25/react-test -f ./client/Dockerfile.dev ./client
-  # - docker build <other containers> 
+  - openssl aes-256-cbc -K $encrypted_9f3b5599b056_key -iv $encrypted_9f3b5599b056_iv -in service-account.json.enc -out service-account.json -d
+  - curl https://sdk.cloud.google.com | bash > /dev/null;
+  - source $HOME/google-cloud-sdk/path.bash.inc
+  - gcloud components update kubectl
+  - gcloud auth activate-service-account --key-file service-account.json
+  - gcloud config set project multi-k8s-394002
+  - gcloud config set compute/zone asia-southeast1-b
+  - gcloud container clusters get-credentials multi-cluster
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+  # - docker build -t pranavbhosale25/react-test -f ./client/Dockerfile.dev ./client // build test version
+  - echo "before install completed"
 
 script:
-  - echo "script complete"
-  # - docker run pranavbhosale25/react-test npm test -- --coverage
-
-after_success:
-  - docker build -t pranavbhosale25/multi-client ./client 
-  - docker build -t pranavbhosale25/multi-nginx ./nginx
-  - docker build -t pranavbhosale25/multi-server ./server
-  - docker build -t pranavbhosale25/multi-worker ./worker  
-  # login to docker cli
-  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
-  # take images and push them to docker hub
-  - docker push pranavbhosale25/multi-client
-  - docker push pranavbhosale25/multi-nginx
-  - docker push pranavbhosale25/multi-server
-  - docker push pranavbhosale25/multi-worker
+  - echo "script section completed"
+  # - docker run -e CI=true pranavbhosale25/react-test npm test
 
 deploy:
-  provider: elasticbeanstalk
-  edge: true
-  region: 'us-west-2'
-  app: 'multi-docker-env-2'
-  env: 'Multi-docker-env-2-env'
-  bucket_name: 'elasticbeanstalk-us-west-2-800907137860'
-  bucket_path: 'docker-multi'
+  provider: script
+  script: bash ./deploy.sh
   on:
     branch: master
-  access_key_id: $AWS_ACCESS_KEY
-  secret_access_key: $AWS_SECRET_KEY
-  cleanup: false
